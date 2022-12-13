@@ -54,9 +54,7 @@ Future<void> main() async {
   }
   JsonEncoder jsonEncoder = JsonEncoder.withIndent('    ');
   for (var k in langs.keys) {
-    writeFile('lib/l10n/app_$k.arb', jsonEncoder.convert(langs[k]));
-    // writeFile(
-    //     '$dir/resources/arb_json/app_$k.json', jsonEncoder.convert(langs[k]));
+    writeFile('app_$k.arb', jsonEncoder.convert(langs[k]));
   }
 }
 
