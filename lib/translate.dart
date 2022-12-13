@@ -1,0 +1,87 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:csv/csv.dart';
+import 'package:gsheets/gsheets.dart';
+
+import 'translation_credentials.dart';
+
+Future<void> main() async {
+  /// Assign the gsheets credentials
+  final gsheets = GSheets(translationCredentials);
+
+  /// Get all of tabs/sheets at the stated location
+  final ss = await gsheets.spreadsheet(translationSheetId);
+
+  final Map<String, String> fileStrings = {};
+  final Map<String, Map<String, dynamic>> langs = {};
+
+  /// For each tab in the sheets
+  for (var sheet in ss.sheets) {
+    var sheetStrings = await downloadSheets(sheet);
+    if (sheetStrings != null) {
+      fileStrings[sheetStrings.first] = sheetStrings.last;
+    }
+  }
+
+  for (var file in fileStrings.keys) {
+    /// Print the name to keep track
+    print(file);
+
+    /// Read the file's contents
+    var newFile = fileStrings[file];
+
+    /// Convert the contents to a list of rows
+    final rows =
+        CsvToListConverter().convert(newFile, fieldDelimiter: '\t', eol: '\n');
+
+    if (rows.isNotEmpty) {
+      for (var i = 3; i < rows[0].length; i++) {
+        langs[rows[0][i]] = {};
+      }
+      for (var i = 0; i < rows.length; i++) {
+        for (var j = 3; j < rows[i].length; j++) {
+          langs[rows[0][j]]?[rows[i][0].toString()] = rows[i][j].toString();
+          // first row for English: no description set
+          // all other rows: add a description / additional field
+          if (rows[0][j] == 'en' && i != 0) {
+            langs[rows[0][j]]
+                ?['@${rows[i][0]}'] = {"description": rows[i][2].toString()};
+          }
+        }
+      }
+    }
+  }
+  JsonEncoder jsonEncoder = JsonEncoder.withIndent('    ');
+  for (var k in langs.keys) {
+    writeFile('lib/l10n/app_$k.arb', jsonEncoder.convert(langs[k]));
+    // writeFile(
+    //     '$dir/resources/arb_json/app_$k.json', jsonEncoder.convert(langs[k]));
+  }
+}
+
+Future<List<String>?> downloadSheets(Worksheet sheet) async {
+  /// Start with an empty string
+  var string = '';
+
+  /// Read all of the values for all of the rows, values is a list of rows
+  var values = (await sheet.values.allRows());
+
+  /// For each row, evaluate its values
+  for (var v in values) {
+    /// Join the values of each cell together separated by tabs
+    string += v.join('\t');
+
+    /// Separate each line with a carriage return
+    string += '\n';
+  }
+
+  return ['${sheet.title.replaceAll('/', '_')}.tsv', string];
+}
+
+Future<void> writeFile(String fileName, String content) async {
+  if (!(await File(fileName).exists())) {
+    await File(fileName).create(recursive: true);
+  }
+  await File(fileName).writeAsString(content);
+}
