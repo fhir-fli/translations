@@ -6,6 +6,9 @@ import 'package:gsheets/gsheets.dart';
 
 import 'translation_credentials.dart';
 
+/// This should be run from the base of the app, so you can just click Run|Debug
+/// but then if you run it from command line, it will be
+/// dart lib/translate.dart
 Future<void> main() async {
   /// Assign the gsheets credentials
   final gsheets = GSheets(translationCredentials);
@@ -78,8 +81,14 @@ Future<List<String>?> downloadSheets(Worksheet sheet) async {
 }
 
 Future<void> writeFile(String fileName, String content) async {
-  if (!(await File(fileName).exists())) {
-    await File(fileName).create(recursive: true);
+  var newFileName = '../fhirlite/lib/l10n/$fileName';
+  if (!(await File(newFileName).exists())) {
+    await File(newFileName).create(recursive: true);
   }
-  await File(fileName).writeAsString(content);
+  await File(newFileName).writeAsString(content);
+  newFileName = newFileName.replaceAll('../fhirlite', '../demo');
+  if (!(await File(newFileName).exists())) {
+    await File(newFileName).create(recursive: true);
+  }
+  await File(newFileName).writeAsString(content);
 }
