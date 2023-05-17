@@ -86,7 +86,7 @@ Future<void> writeFile(String fileName, String content) async {
     await File(newFileName).create(recursive: true);
   }
   await File(newFileName).writeAsString(content);
-  newFileName = newFileName.replaceAll('../fhirlite', '../demo');
+  newFileName = newFileName.replaceAll('../fhirlite', '../fhirlite_demo');
   if (!(await File(newFileName).exists())) {
     await File(newFileName).create(recursive: true);
   }
