@@ -8,7 +8,7 @@ import 'package:gsheets/gsheets.dart';
 /// but then if you run it from command line, it will be
 /// dart lib/translate.dart
 Future<void> translate({
-  required String translationCredentials,
+  required Map<String, dynamic> translationCredentials,
   required String translationSheetId,
   String? dir,
 }) async {
