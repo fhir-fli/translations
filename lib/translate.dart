@@ -4,12 +4,14 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:gsheets/gsheets.dart';
 
-import 'translation_credentials.dart';
-
 /// This should be run from the base of the app, so you can just click Run|Debug
 /// but then if you run it from command line, it will be
 /// dart lib/translate.dart
-Future<void> main() async {
+Future<void> translate({
+  required String translationCredentials,
+  required String translationSheetId,
+  String? dir,
+}) async {
   /// Assign the gsheets credentials
   final gsheets = GSheets(translationCredentials);
 
@@ -57,7 +59,7 @@ Future<void> main() async {
   }
   JsonEncoder jsonEncoder = JsonEncoder.withIndent('    ');
   for (var k in langs.keys) {
-    writeFile('app_$k.arb', jsonEncoder.convert(langs[k]));
+    writeFile('app_$k.arb', jsonEncoder.convert(langs[k]), dir);
   }
 }
 
@@ -80,13 +82,8 @@ Future<List<String>?> downloadSheets(Worksheet sheet) async {
   return ['${sheet.title.replaceAll('/', '_')}.tsv', string];
 }
 
-Future<void> writeFile(String fileName, String content) async {
-  var newFileName = '../fhirlite/lib/l10n/$fileName';
-  if (!(await File(newFileName).exists())) {
-    await File(newFileName).create(recursive: true);
-  }
-  await File(newFileName).writeAsString(content);
-  newFileName = newFileName.replaceAll('../fhirlite', '../fhirlite_demo');
+Future<void> writeFile(String fileName, String content, [String? dir]) async {
+  var newFileName = '${dir ?? "lib/l10n"}/$fileName';
   if (!(await File(newFileName).exists())) {
     await File(newFileName).create(recursive: true);
   }
